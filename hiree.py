@@ -148,34 +148,35 @@ def parse_exp_in_resume(soup, demanded_exp, procents, position):
         return False
 
 
-def parse_resumes():
-    print("Ищем подходящие резюме(фильтр по опыту)...")
+def experience_filter():
+    print("Применяем фильтр по опыту работы...")
     good_resumes = 0
-    with open("all_resumes.txt", 'r', encoding='utf-8') as f:
-        progress = int(f.readline().strip())
-        pbar = tqdm(total=progress)
-        i = 0
-        all_links = ()
-        while i < progress:
-            link = f.readline().strip()
-            try:
-                html = get_html(link)
-                soup = BeautifulSoup(html, 'lxml')
-            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-                print(" Переподключение к страничке с резюме...")
-                sleep(3)
-            if(parse_exp_in_resume(soup, 24, 60, "менеджер")):  # !
-                all_links += (link,)
-                good_resumes += 1
-            i += 1
-            pbar.update()
+    with open("all_resumes.txt", 'r', encoding='utf-8') as read_file:
+        with open("good_resumes.txt", 'w', encoding='utf-8') as write_file:
+            progress = int(read_file.readline().strip())
+            pbar = tqdm(total=progress)
+            i = 0
+            while i < progress:
+                link = read_file.readline().strip()
+                try:
+                    html = get_html(link)
+                    soup = BeautifulSoup(html, 'lxml')
+                except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    print(" Переподключение к страничке с резюме...")
+                    sleep(3)
+                if(parse_exp_in_resume(soup, 24, 60, "менеджер")):  # !
+                    write_file.write(link+'\n')
+                    good_resumes += 1
+                i += 1
+                pbar.update()
+    f = open("good_resumes.txt", "r")
+    oline = f.readlines()
+    oline.insert(0, str(good_resumes)+'\n')
+    f.close()
+    f = open("good_resumes.txt", "w")
+    f.writelines(oline)
+    f.close()
     pbar.close()
-    with open("good_resumes.txt", 'w', encoding='utf-8') as f:
-        f.write(str(good_resumes) + '\n')
-        i = 0
-        while i < good_resumes:
-            f.write(all_links[i] + '\n')
-            i += 1
     print("Найдено", good_resumes, "подходящих резюме.")
 
 
@@ -200,7 +201,7 @@ def sort_relevant_jobs(keyword):  # сортирует резюме по кол-
 
 
 def apply_tags():
-    print("Проверяем теги первого и второго блока...")
+    print("Проверяем теги...")
     keywords11, keywords12, keywords13, keywords21 = [], [], [], []
 
     with open("1-1_condition.txt", 'r', encoding='utf-8') as f:
@@ -217,12 +218,12 @@ def apply_tags():
 
     data = dict()
 
-    with open("good_resumes.txt", 'r', encoding='utf-8') as f:
-        progress = int(f.readline())
+    with open("good_resumes.txt", 'r', encoding='utf-8') as read_file:
+        progress = int(read_file.readline().strip())
         link_ind = 0
         pbar = tqdm(total=progress)
         while link_ind < progress:
-            link = f.readline().strip()
+            link = read_file.readline().strip()
             try:
                 html = get_html(link)
                 soup = BeautifulSoup(html, 'lxml')
@@ -231,12 +232,16 @@ def apply_tags():
                 sleep(3)
 
             job_dscrptn = soup.find_all(attrs={"data-qa": "resume-block-experience-description"})
+            if not job_dscrptn:
+                link_ind += 1
+                pbar.update()
+                continue
             job = "".join(str(j) for j in job_dscrptn)
             job = job.replace("</div>", "")
             job = job.replace("<div data-qa=\"resume-block-experience-description\">", "")
             job = job.replace(';', '.')
 
-            total = 0.1*any(k21 in job for k21 in keywords21)
+            mark = 0.1*any(k21 in job for k21 in keywords21)
 
             job = job.split('.')
             max_sentence_value = 0.0
@@ -251,25 +256,109 @@ def apply_tags():
                     if max_sentence_value == 3:
                         break
                 i += 1
-            total += max_sentence_value
-            if(total > 0.1):
-                data[link] = total
+            mark += max_sentence_value
+            if(mark > 0.1):
+                data[link] = mark
             link_ind += 1
             pbar.update()
     pbar.close()
     print("Найдено", len(data), "подходящих резюме.")
     with open("tagged_good_resumes.txt", 'w', encoding='utf-8') as f:
+        f.write(str(len(data)) + '\n')
         for k in sorted(data, key=data.get, reverse=True):
             f.write(k + ' ' + str(data[k]) + '\n')
+
+
+def get_zodiac(day_month: str):  # строка вида "день месяц" (20 января)
+    day, month = int(day_month.split()[0]), day_month.split()[1]
+    astro_sign = ""
+    if month == "декабря":
+        astro_sign = "стрелец" if (day < 22) else "козерог"
+
+    elif month == "января":
+        astro_sign = "козерог" if (day < 20) else "водолей"
+
+    elif month == "февраля":
+        astro_sign = "водолей" if (day < 19) else "рыба"
+
+    elif month == "марта":
+        astro_sign = "рыба" if (day < 21) else astro_sign = "овен"
+
+    elif month == "апреля":
+        astro_sign = "овен" if (day < 20) else astro_sign = "телец"
+
+    elif month == "мая":
+        astro_sign = "телец" if (day < 21) else astro_sign = "близнецы"
+
+    elif month == "июня":
+        astro_sign = "близнецы" if (day < 21) else astro_sign = "рак"
+
+    elif month == "июля":
+        astro_sign = "рак" if (day < 23) else astro_sign = "лев"
+
+    elif month == "августа":
+        astro_sign = "лев" if (day < 23) else astro_sign = "дева"
+
+    elif month == "сентября":
+        astro_sign = "дева" if (day < 23) else astro_sign = "весы"
+
+    elif month == "октября":
+        astro_sign = "весы" if (day < 23) else astro_sign = "скорпион"
+
+    elif month == "ноября":
+        astro_sign = "скорпион" if (day < 22) else astro_sign = "стрелец"
+    return astro_sign
+
+
+def zodiac_filter(desired_sign: str):
+    print("Проверяем знак зодиака...")
+    # data = ()
+    total = 0
+    with open("tagged_good_resumes.txt", 'r', encoding='utf-8') as read_file:
+        with open("zodiac_resumes.txt", 'w', encoding='utf-8') as write_file:
+            progress = int(read_file.readline().strip())
+            link_ind = 0
+            pbar = tqdm(total=progress)
+            while link_ind < progress:
+                link = read_file.readline().strip()
+                try:
+                    html = get_html(link[:len(link)-4])
+                    soup = BeautifulSoup(html, 'lxml')
+                except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    print(" Переподключение к страничке с резюме...")
+                    sleep(3)
+                date_of_birth = soup.find(attrs={"data-qa": "resume-personal-birthday"})
+                if date_of_birth == None:
+                    link_ind += 1
+                    pbar.update()
+                    continue
+                date_of_birth = str(date_of_birth).replace("</span>", "")
+                date_of_birth = date_of_birth.replace(
+                    "<span data-qa=\"resume-personal-birthday\">", "")
+                if desired_sign == get_zodiac(str(date_of_birth)[:len(date_of_birth)-5]):
+                    write_file.write(link + '\n')
+                    total += 1
+                link_ind += 1
+                pbar.update()
+    pbar.close()
+    f = open("zodiac_resumes.txt", "r")
+    oline = f.readlines()
+    oline.insert(0, str(total)+'\n')
+    f.close()
+    f = open("zodiac_resumes.txt", "w")
+    f.writelines(oline)
+    f.close()
+    print("Найденно", total, "подходящих резюме.")
 
 
 if __name__ == '__main__':
     # print("Введите запрос:")
     # query = input().lower().replace(' ', '+')
-    query = "менеджер+по+продажам"
-    area = '2'
+    # query = "менеджер+по+продажам"
+    # area = '2' # СПБ
     # # сначала вытащим все ссылки на резюме по данному запросу и региону
-    # get_all_resumes(query, area, 500)
+    # get_all_resumes(query, area, 5000)
     # # теперь распарсим информацию по каждой ссылке, полученной выше
-    # parse_resumes()  # по опыту работы
-    apply_tags()
+    # experience_filter()  # по опыту работы
+    # apply_tags()
+    zodiac_filter("овен")
