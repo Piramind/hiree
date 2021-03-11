@@ -6,6 +6,8 @@ from time import sleep
 import os
 from tqdm import tqdm
 import subprocess
+import re
+import pymorphy2
 # достает html код по указанной ссылке
 
 local_proc = 0
@@ -217,71 +219,6 @@ def sort_relevant_jobs(keyword):  # сортирует резюме по кол-
 '''
 
 
-def apply_tags():
-    print("Проверяем теги...")
-    keywords11, keywords12, keywords13, keywords21 = [], [], [], []
-
-    with open("1-1_condition.txt", 'r', encoding='utf-8') as f:
-        keywords11 = [word.strip() for word in f]
-
-    with open("1-2_condition.txt", 'r', encoding='utf-8') as f:
-        keywords12 = [word.strip() for word in f]
-
-    with open("1-3_condition.txt", 'r', encoding='utf-8') as f:
-        keywords13 = [word.strip() for word in f]
-
-    with open("2-1_condition.txt", 'r', encoding='utf-8') as f:
-        keywords21 = [word.strip() for word in f]
-
-    data = dict()
-
-    with open("salary_resumes.txt", 'r', encoding='utf-8') as read_file:
-        progress = int(read_file.readline().strip())
-        link_ind = 0
-        pbar = tqdm(total=progress)
-        while link_ind < progress:
-            link = read_file.readline().strip()
-            try:
-                html = get_html(link)
-                soup = BeautifulSoup(html, 'lxml')
-            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-                print(" Переподключение к страничке с резюме...")
-                sleep(3)
-
-            job_dscrptn = soup.find_all(attrs={"data-qa": "resume-block-experience-description"})
-            if not job_dscrptn:
-                link_ind += 1
-                pbar.update()
-                continue
-            job = "".join(str(j) for j in job_dscrptn)
-            job = job.replace("</div>", "")
-            job = job.replace("<div data-qa=\"resume-block-experience-description\">", "")
-            job = job.replace(';', '.')
-
-            total_value = 0.1*any(k21 in job for k21 in keywords21)
-
-            job = job.split('.')
-            i = 0
-            while i < len(job):
-                j = job[i]
-                sentence_value = 1 * any(k11 in j for k11 in keywords11)
-                sentence_value += 1 * any(k12 in j for k12 in keywords12)
-                sentence_value += 1 * any(k13 in j for k13 in keywords13)
-                if sentence_value > 0:
-                    total_value += sentence_value
-                i += 1
-            if(total_value > 1):
-                data[link] = total_value
-            link_ind += 1
-            pbar.update()
-    pbar.close()
-    print("Найдено", len(data), "подходящих резюме.")
-    with open("tagged_good_resumes.txt", 'w', encoding='utf-8') as f:
-        f.write(str(len(data)) + '\n')
-        for k in sorted(data, key=data.get, reverse=True):
-            f.write(k + ' ' + str(data[k]) + '\n')
-
-
 def get_zodiac(day_month: str):  # строка вида "день месяц" (20 января)
     day, month = int(day_month.split()[0]), day_month.split()[1]
     astro_sign = ""
@@ -416,6 +353,131 @@ def salary_filter(min_salary: int, max_salary: int):
     print("Найденно", total, "подходящих резюме.")
 
 
+def apply_tags():
+    print("Проверяем теги...")
+    keywords11, keywords12, keywords13, keywords21 = [], [], [], []
+
+    with open("1-1_condition.txt", 'r', encoding='utf-8') as f:
+        keywords11 = [word.strip() for word in f]
+
+    with open("1-2_condition.txt", 'r', encoding='utf-8') as f:
+        keywords12 = [word.strip() for word in f]
+
+    with open("1-3_condition.txt", 'r', encoding='utf-8') as f:
+        keywords13 = [word.strip() for word in f]
+
+    with open("2-1_condition.txt", 'r', encoding='utf-8') as f:
+        keywords21 = [word.strip() for word in f]
+
+    data = dict()
+
+    with open("salary_resumes.txt", 'r', encoding='utf-8') as read_file:
+        progress = int(read_file.readline().strip())
+        link_ind = 0
+        pbar = tqdm(total=progress)
+        while link_ind < progress:
+            link = read_file.readline().strip()
+            try:
+                html = get_html(link)
+                soup = BeautifulSoup(html, 'lxml')
+            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                print(" Переподключение к страничке с резюме...")
+                sleep(3)
+
+            job_dscrptn = soup.find_all(attrs={"data-qa": "resume-block-experience-description"})
+            if not job_dscrptn:
+                link_ind += 1
+                pbar.update()
+                continue
+            job = "".join(str(j) for j in job_dscrptn)
+            job = job.replace("</div>", "")
+            job = job.replace("<div data-qa=\"resume-block-experience-description\">", "")
+            job = job.replace(';', '')
+            job = job.replace('-', '')
+
+            total_value = 0.1*any(k21 in job for k21 in keywords21)
+
+            job = job.split('.')
+            i = 0
+            while i < len(job):
+                j = job[i]
+                sentence_value = 1 * any(k11 in j for k11 in keywords11)
+                sentence_value += 1 * any(k12 in j for k12 in keywords12)
+                sentence_value += 1 * any(k13 in j for k13 in keywords13)
+                if sentence_value > 0:
+                    total_value += sentence_value
+                i += 1
+            if(total_value > 1):
+                data[link] = total_value
+            link_ind += 1
+            pbar.update()
+    pbar.close()
+    print("Найдено", len(data), "подходящих резюме.")
+    with open("tagged_good_resumes.txt", 'w', encoding='utf-8') as f:
+        f.write(str(len(data)) + '\n')
+        for k in sorted(data, key=data.get, reverse=True):
+            f.write(k + ' ' + str(data[k]) + '\n')
+
+
+def verb_filter():
+    with open("salary_resumes.txt", 'r', encoding='utf-8') as read_file:
+        with open("verb_resumes.txt", 'w', encoding='utf-8') as write_file:
+            progress = int(read_file.readline().strip())
+            link_ind = 0
+            pbar = tqdm(total=progress)
+            morph = pymorphy2.MorphAnalyzer()
+            total = 0
+            while link_ind < progress:
+                link = read_file.readline().strip()
+                try:
+                    html = get_html(link)
+                    soup = BeautifulSoup(html, 'lxml')
+                except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    print(" Переподключение к страничке с резюме...")
+                    sleep(3)
+                job_dscrptn = soup.find_all(
+                    attrs={"data-qa": "resume-block-experience-description"})
+                if not job_dscrptn:
+                    link_ind += 1
+                    pbar.update()
+                    continue
+                job = "".join(str(j) for j in job_dscrptn)
+                job = re.sub("[^А-Яа-я ]", "", job)
+                job = job.strip().split()
+                word_count = len(job)
+                bad_words = 0
+                bad_resume = False
+                i = 0
+                while i < word_count:
+                    p = morph.parse(job[i])[0].tag
+                    if not "VERB" in p and not "NOUN" in p:
+                        i += 1
+                        continue
+                    elif "VERB" in p and "past" in p:
+                        bad_words += 1
+                    elif "NOUN" in p and "nomn" in p and "neut" in p:
+                        bad_words += 1
+                    if bad_words/word_count > 0.2:  # !!
+                        bad_resume = True
+                        break
+                    i += 1
+                # print(bad_words/word_count)
+                if not bad_resume:
+                    write_file.write(link+'\n')
+                    total += 1
+                link_ind += 1
+                pbar.update()
+    pbar.close()
+    f = open("verb_resumes.txt", "r")
+    oline = f.readlines()
+    oline.insert(0, str(total)+'\n')
+    f.close()
+    f = open("verb_resumes.txt", "w")
+    f.writelines(oline)
+    f.close()
+    print("Найденно", total, "подходящих резюме.")
+
+
 if __name__ == '__main__':
     # print("Введите запрос:")
     # query = input().lower().replace(' ', '+')
@@ -423,8 +485,9 @@ if __name__ == '__main__':
     area = '2'  # СПБ
     # сначала вытащим все ссылки на резюме по данному запросу и региону
     get_all_resumes(query, area, 1000)
-    # теперь распарсим информацию по каждой ссылке, полученной выше
+    теперь распарсим информацию по каждой ссылке, полученной выше
     sexperience_filter()  # по опыту работы и полу
     zodiac_filter("овен")
     salary_filter(60000, 250000)
+    # verb_filter() # теститься (нужно правильное число на 460 строку)
     apply_tags()  # тэги
