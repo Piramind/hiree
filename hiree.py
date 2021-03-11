@@ -46,6 +46,20 @@ def get_resumes_links(html):
         i += 1
     return new_links
 
+"""
+def get_resumes_links_rabot(html):
+    # новый объект класса BeutifulSoup
+    soup = BeautifulSoup(html, 'lxml')
+    new_links_rab = []
+    links = soup.find_all('a', class_='search-title vm ')
+    for link in links:
+        link_parsed = ("http://rabota.ru") + link.get('href')
+        new_links_rab.append(link_parsed)
+    print(new_links_rab)
+    return new_links_rab
+"""
+
+
 # функция, которая для данного запроса и региона ищет все страницы с результатами поиска и набирает большой список со всеми ссылками на вакансии
 # возвращает список ссылок по запросу query в регионе с кодом area
 
