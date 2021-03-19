@@ -1,11 +1,23 @@
 from .ParentFilter import *
+import pymorphy2
+from re import sub
 
 # Класс, который должен отсеивать шаблонные резюме. В шаблонных резюме много (сколько?) глаголов прошедшего времени совершенного вида и существительных в Им. падеже единственного числа.
 
 
-class hhVerbFilter(ParentFilter):
+class VerbFilter(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, readfile_name="all_resumes.txt", writefile_name="verb_resumes.txt"):
         super().__init__(readfile_name, writefile_name)
+
+    # Запуск фильтра
+    @abstractmethod
+    def run(self) -> None:
+        super().run()
+
+
+class hhVerbFilter(VerbFilter):
 
     def run(self):
         print("Фильтр по глаголам...")
@@ -23,7 +35,7 @@ class hhVerbFilter(ParentFilter):
                         html = super().get_html(link)
                         soup = BeautifulSoup(html, 'lxml')
                     # Если проблемы с подключением
-                    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                         print(" Переподключение к страничке с резюме...")
                         sleep(3)  # Попробовать снова через 3 секунды
                     job_dscrptn = soup.find_all(
@@ -34,7 +46,7 @@ class hhVerbFilter(ParentFilter):
                         continue
 
                     job = "".join(j.get_text() for j in job_dscrptn)  # Получаем текст
-                    job = re.sub("[^А-Яа-я ]", "", job)  # Оставляем только русские буквы и пробелы
+                    job = sub("[^А-Яа-я ]", "", job)  # Оставляем только русские буквы и пробелы
                     job = job.split()  # Дробим по пробелам и получаем list слов
                     word_count = len(job)  # колличество слов
                     bad_words = 0  # Плохие слова: глаголы и существительные

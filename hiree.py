@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from Filters.hhResumeColector import hhResumeColector
-from Filters.hhExperienceFilter import hhExperienceFilter
-from Filters.hhZodiacFilter import hhZodiacFilter
-from Filters.hhGenderFilter import hhGenderFilter
-from Filters.hhSalaryFilter import hhSalaryFilter
-from Filters.hhVerbFilter import hhVerbFilter
-from Filters.hhTagsFilter import hhTagsFilter
+from Filters.ParentFilter import ParentFilter
+from Filters.ResumeColector import hhResumeColector
+from Filters.ExperienceFilter import hhExperienceFilter
+from Filters.ZodiacFilter import hhZodiacFilter
+from Filters.GenderFilter import hhGenderFilter
+from Filters.SalaryFilter import hhSalaryFilter
+from Filters.VerbFilter import hhVerbFilter
+from Filters.TagsFilter import hhTagsFilter
 
 
 '''
@@ -29,8 +30,28 @@ def sort_relevant_jobs(keyword):  # сортирует резюме по кол-
 '''
 
 
+class hireeApp():
+    def __init__(self):
+        self.Filters = []
+
+    def add_filter(self, new_filter: ParentFilter) -> None:
+        self.Filters += [new_filter]
+
+    def add_filters(self, new_filters: list) -> None:
+        for new_filter in new_filters:
+            # if type(new_filter) == type(ParentFilter):
+            self.add_filter(new_filter)
+
+    def execute(self) -> None:
+        for filter in self.Filters:
+            filter.run()
+
+
 if __name__ == '__main__':
-    hhcol = hhResumeColector("Менеджер", 2000)
+
+    my_hiree = hireeApp()
+
+    hhcol = hhResumeColector("Менеджер", 200)
     filters = [hhcol,
                hhExperienceFilter(hhcol.position, writefile_name="exp_res.txt"),
                hhZodiacFilter("Овен", "exp_res.txt", "zod_res.txt"),
@@ -38,5 +59,6 @@ if __name__ == '__main__':
                hhSalaryFilter(60000, 250000, "gen_res.txt", "sal_res.txt"),
                hhVerbFilter("sal_res.txt", "verb_res.txt"),
                hhTagsFilter("verb_res.txt", "tag_res.txt")]
-    for filter in filters:
-        filter.run()
+
+    my_hiree.add_filters(filters)
+    my_hiree.execute()

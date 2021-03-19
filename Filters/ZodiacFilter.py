@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from .ParentFilter import *
+from re import sub
 
 
-class hhZodiacFilter(ParentFilter):
+class ZodiacFilter(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, desired_sign: str, readfile_name="all_resumes.txt", writefile_name="zodiac_resumes.txt"):
         super().__init__(readfile_name, writefile_name)
         self.desired_sign = desired_sign.lower()
@@ -48,6 +51,14 @@ class hhZodiacFilter(ParentFilter):
             astro_sign = "скорпион" if (day < 22) else "стрелец"
         return astro_sign
 
+    # Запуск фильтра
+    @abstractmethod
+    def run(self) -> None:
+        super().run()
+
+
+class hhZodiacFilter(ZodiacFilter):
+
     def run(self):
         print("Проверяем знак зодиака...")
         total = 0
@@ -61,7 +72,7 @@ class hhZodiacFilter(ParentFilter):
                     try:
                         html = super().get_html(link[:len(link)-4])
                         soup = BeautifulSoup(html, 'lxml')
-                    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                         print(" Переподключение к страничке с резюме...")
                         sleep(3)
 
@@ -71,7 +82,7 @@ class hhZodiacFilter(ParentFilter):
                         pbar.update()
                         continue
 
-                    date_of_birth = re.sub("[^А-Яа-я0-9] ", "", date_of_birth.get_text())
+                    date_of_birth = sub("[^А-Яа-я0-9] ", "", date_of_birth.get_text())
                     if self.desired_sign == self.get_zodiac(str(date_of_birth)[:len(date_of_birth)-5]):
                         write_file.write(link + '\n')
                         total += 1

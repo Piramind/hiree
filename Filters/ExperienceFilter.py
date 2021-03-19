@@ -1,23 +1,44 @@
 # -*- coding: utf-8 -*-
 
 from .ParentFilter import *
+# from abc import ABCMeta, abstractmethod
 
 
-class hhExperienceFilter(ParentFilter):
+class ExperienceFilter(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, position: str, min_experience=24, procents=60, readfile_name="all_resumes.txt", writefile_name="exp_resumes.txt"):
         super().__init__(readfile_name, writefile_name)
         self.position = position
         self.min_experience = min_experience
         self.procents = procents
 
-    def young_age(self, soup, age_limit: int):  # Возвращает False если человеку больше чем age_limit лет
+    # Возвращает False если человеку больше чем age_limit лет
+    @abstractmethod
+    def young_age(self, soup, age_limit: int) -> bool:
+        raise NotImplementedError
+
+    # Функция, которая парсит блок с опытом работы
+    @abstractmethod
+    def parse_exp_in_resume(self, soup) -> bool:
+        raise NotImplementedError
+
+    # Запуск фильтра
+    @abstractmethod
+    def run(self) -> None:
+        super().run()
+
+
+class hhExperienceFilter(ExperienceFilter):
+
+    def young_age(self, soup, age_limit: int) -> bool:
         age = soup.find(attrs={"data-qa": "resume-personal-age"})
         if not age:
             return True
         return int(age.get_text().strip().split()[0]) < age_limit
 
     # Функция, которая парсит блок с опытом работы
-    def parse_exp_in_resume(self, soup):
+    def parse_exp_in_resume(self, soup) -> bool:
         # находим общий опыт работы
         all_exp = soup.find_all('div', class_="bloko-text-tertiary")
         total_exp_str = soup.find(
@@ -59,7 +80,7 @@ class hhExperienceFilter(ParentFilter):
         else:
             return False
 
-    def run(self):
+    def run(self) -> None:
         print("Проверяем опыт работы...")
         total = 0
         with open(self.readfile_name, 'r', encoding='utf-8') as read_file:
@@ -72,7 +93,7 @@ class hhExperienceFilter(ParentFilter):
                     try:
                         html = super().get_html(link)
                         soup = BeautifulSoup(html, 'lxml')
-                    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                         print(" Переподключение к страничке с резюме...")
                         sleep(3)
                     if self.young_age(soup, 26):

@@ -3,10 +3,20 @@
 from .ParentFilter import *
 
 
-class hhGenderFilter(ParentFilter):
+class GenderFilter(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, desired_gender: str, readfile_name="all_resumes.txt", writefile_name="gender_resumes.txt"):
         super().__init__(readfile_name, writefile_name)
         self.desired_gender = desired_gender.lower()
+
+    # Запуск фильтра
+    @abstractmethod
+    def run(self) -> None:
+        super().run()
+
+
+class hhGenderFilter(GenderFilter):
 
     def run(self):
         print("Проверяем опыт пол (паркетный)...")
@@ -21,7 +31,7 @@ class hhGenderFilter(ParentFilter):
                     try:
                         html = super().get_html(link)
                         soup = BeautifulSoup(html, 'lxml')
-                    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                         print(" Переподключение к страничке с резюме...")
                         sleep(3)
                     personal_gender = soup.find(attrs={"data-qa": "resume-personal-gender"})

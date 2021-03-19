@@ -1,16 +1,32 @@
 # -*- coding: utf-8 -*-
 
 from .ParentFilter import *
+# from abc import ABCMeta, abstractmethod
 
 
-class hhResumeColector(ParentFilter):
+class ResumeColector(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, position: str, number_of_resumes: int, area=2, writefile_name="all_resumes.txt"):
         super().__init__(writefile_name,  writefile_name)
         self.position = position.lower().replace(' ', '+')
         self.number_of_resumes = number_of_resumes
         self.area = str(area)
 
-    def get_resumes_links(self, html):
+    # Собирает ссылки на резюме с глобальной страницы
+    @abstractmethod
+    def get_resumes_links(self, html) -> tuple:
+        raise NotImplementedError
+
+    # Запуск фильтра
+    @abstractmethod
+    def run(self):
+        super().run()
+
+
+class hhResumeColector(ResumeColector):
+
+    def get_resumes_links(self, html) -> tuple:
         # новый объект класса BeutifulSoup
         soup = BeautifulSoup(html, 'lxml')
         new_links = ()
@@ -22,7 +38,7 @@ class hhResumeColector(ParentFilter):
         return new_links
 
     # Функция, которая для данного запроса и региона ищет все страницы с результатами поиска и набирает большой список со всеми ссылками на вакансии возвращает список ссылок по запросу position в регионе с кодом area
-    def run(self):
+    def run(self) -> None:
         print("Собираем глобальные ссылки...")
         basic_url = "".join(tuple(("https://hh.ru/search/resume?clusters=True", "&area=", self.area,
                                    "&order_by=relevance&logic=normal&pos=position&exp_period=all_time&no_magic=False&st=resumeSearch", "&text=", self.position, "&page=")))
@@ -36,7 +52,7 @@ class hhResumeColector(ParentFilter):
             url = basic_url+str(i)
             try:
                 html = super().get_html(url)
-            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                 print(" Переподключение к глобальной странице...")
                 sleep(3)
             all_links += self.get_resumes_links(html)

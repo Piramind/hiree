@@ -1,13 +1,24 @@
 from .ParentFilter import *
+from re import sub
 
 
-class hhSalaryFilter(ParentFilter):
+class SalaryFilter(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, min_salary: int, max_salary: int, readfile_name="all_resumes.txt", writefile_name="salary_resumes.txt"):
         super().__init__(readfile_name, writefile_name)
         self.min_salary = min_salary
         self.max_salary = max_salary
 
-    def run(self):
+    # Запуск фильтра
+    @abstractmethod
+    def run(self) -> None:
+        super().run()
+
+
+class hhSalaryFilter(SalaryFilter):
+
+    def run(self) -> None:
         print("Проверяем желаемую зарплату...")
         with open(self.readfile_name, 'r', encoding='utf-8') as read_file:
             with open(self.writefile_name, 'w', encoding='utf-8') as write_file:
@@ -20,7 +31,7 @@ class hhSalaryFilter(ParentFilter):
                     try:
                         html = super().get_html(link[:len(link)-4])
                         soup = BeautifulSoup(html, 'lxml')
-                    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                         print(" Переподключение к страничке с резюме...")
                         sleep(3)
                     money = soup.find(
@@ -38,10 +49,16 @@ class hhSalaryFilter(ParentFilter):
                         link_ind += 1
                         pbar.update()
                         continue
-                    money = re.sub("[0-9]", "", money)
-                    money = money.replace('\u2009', '')
+                    money = sub("[^0-9]", "", money)
+                    # money = money.replace('\u2009', '')
+                    if money == "":
+                        write_file.write(link+'\n')
+                        total += 1
+                        link_ind += 1
+                        pbar.update()
+                        continue
                     money = int(money)
-                    if money > min_salary and money < max_salary:
+                    if self.min_salary < money and money < self.max_salary:
                         write_file.write(link+'\n')
                         total += 1
                     link_ind += 1

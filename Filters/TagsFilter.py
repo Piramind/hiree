@@ -1,9 +1,20 @@
 from .ParentFilter import *
+from re import sub
 
 
-class hhTagsFilter(ParentFilter):
+class TagsFilter(ParentFilter):
+    __metaclass__ = ABCMeta
+
     def __init__(self, readfile_name="all_resumes.txt", writefile_name="tagged_resumes.txt"):
         super().__init__(readfile_name, writefile_name)
+
+    # Запуск фильтра
+    @abstractmethod
+    def run(self) -> None:
+        super().run()
+
+
+class hhTagsFilter(TagsFilter):
 
     def run(self):
         print("Проверяем теги...")
@@ -32,7 +43,7 @@ class hhTagsFilter(ParentFilter):
                 try:
                     html = get_html(link)
                     soup = BeautifulSoup(html, 'lxml')
-                except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
                     print(" Переподключение к страничке с резюме...")
                     sleep(3)
 
@@ -44,7 +55,7 @@ class hhTagsFilter(ParentFilter):
                     continue
 
                 job = "".join(j.get_text() for j in job_dscrptn)
-                job = re.sub("[^А-Яа-я .]", "", job)
+                job = sub("[^А-Яа-я .]", "", job)
 
                 total_value = 0.1*any(k21 in job for k21 in keywords21)
 
