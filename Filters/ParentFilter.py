@@ -25,15 +25,6 @@ class ParentFilter():
             sleep(3)
         return html
 
-    # проверяет, есть ли на странице(глобальной) ссылки на вакансии
-    def is_empty(self, html) -> bool:
-        soup = BeautifulSoup(html, 'lxml')
-        links = soup.find_all('resume-serp_block-result-action')
-        if links == []:
-            return True
-        else:
-            return False
-
     def write_top(self,  some_int: int) -> None:
         f = open(self.writefile_name, "r")
         oline = f.readlines()

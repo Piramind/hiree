@@ -51,9 +51,8 @@ if __name__ == '__main__':
 
     my_hiree = hireeApp()
 
-    hhcol = hhResumeColector("Менеджер", 200)
-    filters = [hhcol,
-               hhExperienceFilter(hhcol.position, writefile_name="exp_res.txt"),
+    filters = [hhResumeColector("Менеджер", 200),
+               hhExperienceFilter("Менеджер", writefile_name="exp_res.txt"),
                hhZodiacFilter("Овен", "exp_res.txt", "zod_res.txt"),
                hhGenderFilter("Мужчина", "zod_res.txt", "gen_res.txt"),
                hhSalaryFilter(60000, 250000, "gen_res.txt", "sal_res.txt"),
