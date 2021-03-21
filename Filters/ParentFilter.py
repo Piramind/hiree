@@ -14,18 +14,24 @@ class ParentFilter():
         self.readfile_name = readfile_name
         self.writefile_name = writefile_name
 
-    def get_html(self, url) -> str:
+    def _get_html(self, url) -> str:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         html = ""
-        try:
-            html = get(url, headers=headers).text
-        except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-            print("Обработка исключения в get_html()...")
-            sleep(3)
+        for i in range(5):
+            try:
+                html = get(url, headers=headers).text
+                str_err = None
+            except Exception as str_err:
+                pass
+            if str_err:
+                print("Обработка исключения в _get_html...")
+                sleep(2)
+            else:
+                break
         return html
 
-    def write_top(self,  some_int: int) -> None:
+    def _write_top(self,  some_int: int) -> None:
         f = open(self.writefile_name, "r")
         oline = f.readlines()
         oline.insert(0, str(some_int)+'\n')

@@ -6,7 +6,7 @@ from .ParentFilter import *
 class GenderFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, desired_gender: str, readfile_name="all_resumes.txt", writefile_name="gender_resumes.txt"):
+    def __init__(self, desired_gender: str, readfile_name: str, writefile_name: str):
         super().__init__(readfile_name, writefile_name)
         self.desired_gender = desired_gender.lower()
 
@@ -18,6 +18,9 @@ class GenderFilter(ParentFilter):
 
 class hhGenderFilter(GenderFilter):
 
+    def __init__(self, desired_gender: str, readfile_name: str = "hh_res.txt", writefile_name: str = "hh_gender_res.txt"):
+        super().__init__(desired_gender, readfile_name, writefile_name)
+
     def run(self):
         print("Проверяем опыт пол (паркетный)...")
         total = 0
@@ -28,12 +31,8 @@ class hhGenderFilter(GenderFilter):
                 i = 0
                 while i < progress:
                     link = read_file.readline().strip()
-                    try:
-                        html = super().get_html(link)
-                        soup = BeautifulSoup(html, 'lxml')
-                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                        print(" Переподключение к страничке с резюме...")
-                        sleep(3)
+                    html = super()._get_html(link)
+                    soup = BeautifulSoup(html, 'lxml')
                     personal_gender = soup.find(attrs={"data-qa": "resume-personal-gender"})
                     if not personal_gender:
                         write_file.write(link+'\n')
@@ -45,5 +44,5 @@ class hhGenderFilter(GenderFilter):
                     i += 1
                     pbar.update()
                 pbar.close()
-        super().write_top(total)
+        super()._write_top(total)
         print("Найдено", total, "подходящих резюме.")

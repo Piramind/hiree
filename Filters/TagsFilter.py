@@ -1,12 +1,35 @@
 from .ParentFilter import *
 from re import sub
+import os
+from openpyxl import load_workbook
 
 
 class TagsFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, readfile_name="all_resumes.txt", writefile_name="tagged_resumes.txt"):
+    def __init__(self, readfile_name: str, writefile_name: str, wb_name: str):
         super().__init__(readfile_name, writefile_name)
+
+        # wb_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir)) + '/' + wb_name
+        wb_path = os.getcwd() + '/' + wb_name
+        wb = load_workbook(filename=wb_path, read_only=True)
+        ws = wb["Лист2"]  # временный костыль
+
+        self.keywords1 = self._get_keywords(ws['A2':'A100'])
+        self.keywords2 = self._get_keywords(ws['B2':'B100'])
+        self.keywords3 = self._get_keywords(ws['C2':'C100'])
+        self.keywords4 = self._get_keywords(ws['D2':'D100'])
+        self.keywords5 = self._get_keywords(ws['E2':'E100'])
+
+    def _get_keywords(self, cell_range: tuple) -> tuple:
+        keywords = ()
+        for row in cell_range:
+            for cell in row:
+                cell_value = cell.value
+                if not cell_value:
+                    break
+                keywords += (cell_value,)
+        return keywords
 
     # Запуск фильтра
     @abstractmethod
@@ -15,22 +38,11 @@ class TagsFilter(ParentFilter):
 
 
 class hhTagsFilter(TagsFilter):
+    def __init__(self, readfile_name="hh_res.txt", writefile_name="hh_tagged_res.txt", wb_name="tags.xlsx"):
+        super().__init__(readfile_name, writefile_name, wb_name)
 
     def run(self):
         print("Проверяем теги...")
-        keywords11, keywords12, keywords13, keywords21 = [], [], [], []
-
-        with open("1-1_condition.txt", 'r', encoding='utf-8') as f:
-            keywords11 = [word.strip() for word in f]
-
-        with open("1-2_condition.txt", 'r', encoding='utf-8') as f:
-            keywords12 = [word.strip() for word in f]
-
-        with open("1-3_condition.txt", 'r', encoding='utf-8') as f:
-            keywords13 = [word.strip() for word in f]
-
-        with open("2-1_condition.txt", 'r', encoding='utf-8') as f:
-            keywords21 = [word.strip() for word in f]
 
         data = dict()
 
@@ -40,12 +52,8 @@ class hhTagsFilter(TagsFilter):
             pbar = tqdm(total=progress)
             while link_ind < progress:
                 link = read_file.readline().strip()
-                try:
-                    html = get_html(link)
-                    soup = BeautifulSoup(html, 'lxml')
-                except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                    print(" Переподключение к страничке с резюме...")
-                    sleep(3)
+                html = super()._get_html(link)
+                soup = BeautifulSoup(html, 'lxml')
 
                 job_dscrptn = soup.find_all(
                     attrs={"data-qa": "resume-block-experience-description"})
@@ -57,15 +65,16 @@ class hhTagsFilter(TagsFilter):
                 job = "".join(j.get_text() for j in job_dscrptn)
                 job = sub("[^А-Яа-я .]", "", job)
 
-                total_value = 0.1*any(k21 in job for k21 in keywords21)
+                total_value = 0.1*any(k5 in job for k5 in self.keywords5)
 
                 job = job.split('.')
                 i = 0
                 while i < len(job):
                     j = job[i]
-                    sentence_value = 1 * any(k11 in j for k11 in keywords11)
-                    sentence_value += 1 * any(k12 in j for k12 in keywords12)
-                    sentence_value += 1 * any(k13 in j for k13 in keywords13)
+                    sentence_value = 1 * any(k1 in j for k1 in self.keywords1)
+                    sentence_value += 1 * any(k2 in j for k2 in self.keywords2)
+                    sentence_value += 1 * any(k3 in j for k3 in self.keywords3)
+                    sentence_value += 1 * any(k4 in j for k4 in self.keywords4)
                     if sentence_value > 0:
                         total_value += sentence_value
                     i += 1

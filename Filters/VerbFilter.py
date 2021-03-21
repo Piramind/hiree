@@ -8,7 +8,7 @@ from re import sub
 class VerbFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, readfile_name="all_resumes.txt", writefile_name="verb_resumes.txt"):
+    def __init__(self, readfile_name: str, writefile_name: str):
         super().__init__(readfile_name, writefile_name)
 
     # Запуск фильтра
@@ -18,6 +18,8 @@ class VerbFilter(ParentFilter):
 
 
 class hhVerbFilter(VerbFilter):
+    def __init__(self, readfile_name="hh_res.txt", writefile_name="hh_verb_res.txt"):
+        super().__init__(readfile_name, writefile_name)
 
     def run(self):
         print("Фильтр по глаголам...")
@@ -31,13 +33,8 @@ class hhVerbFilter(VerbFilter):
 
                 while link_ind < progress:  # По всем резюме
                     link = read_file.readline().strip()  # Прочитали ссылку на резюме
-                    try:
-                        html = super().get_html(link)
-                        soup = BeautifulSoup(html, 'lxml')
-                    # Если проблемы с подключением
-                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                        print(" Переподключение к страничке с резюме...")
-                        sleep(3)  # Попробовать снова через 3 секунды
+                    html = super()._get_html(link)
+                    soup = BeautifulSoup(html, 'lxml')
                     job_dscrptn = soup.find_all(
                         attrs={"data-qa": "resume-block-experience-description"})  # Про каждое место работы
                     if not job_dscrptn:  # Если ничего не нашли, то переходим к следующему резюме
@@ -73,5 +70,5 @@ class hhVerbFilter(VerbFilter):
                     link_ind += 1
                     pbar.update()
                 pbar.close()
-        super().write_top(total)
+        super()._write_top(total)
         print("Найденно", total, "подходящих резюме.")

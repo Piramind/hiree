@@ -7,7 +7,7 @@ from re import sub
 class ZodiacFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, desired_sign: str, readfile_name="all_resumes.txt", writefile_name="zodiac_resumes.txt"):
+    def __init__(self, desired_sign: str, readfile_name: str, writefile_name: str):
         super().__init__(readfile_name, writefile_name)
         self.desired_sign = desired_sign.lower()
 
@@ -59,6 +59,9 @@ class ZodiacFilter(ParentFilter):
 
 class hhZodiacFilter(ZodiacFilter):
 
+    def __init__(self, desired_sign: str, readfile_name="hh_res.txt", writefile_name="hh_zodiac_res.txt"):
+        super().__init__(desired_sign, readfile_name, writefile_name)
+
     def run(self):
         print("Проверяем знак зодиака...")
         total = 0
@@ -69,12 +72,8 @@ class hhZodiacFilter(ZodiacFilter):
                 pbar = tqdm(total=progress)
                 while link_ind < progress:
                     link = read_file.readline().strip()
-                    try:
-                        html = super().get_html(link[:len(link)-4])
-                        soup = BeautifulSoup(html, 'lxml')
-                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                        print(" Переподключение к страничке с резюме...")
-                        sleep(3)
+                    html = super()._get_html(link[:len(link)-4])
+                    soup = BeautifulSoup(html, 'lxml')
 
                     date_of_birth = soup.find(attrs={"data-qa": "resume-personal-birthday"})
                     if not date_of_birth:
@@ -89,5 +88,5 @@ class hhZodiacFilter(ZodiacFilter):
                     link_ind += 1
                     pbar.update()
                 pbar.close()
-        super().write_top(total)
+        super()._write_top(total)
         print("Найденно", total, "подходящих резюме.")

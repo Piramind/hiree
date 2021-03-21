@@ -7,7 +7,7 @@ from .ParentFilter import *
 class ResumeColector(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, position: str, number_of_resumes: int, area=2, writefile_name="all_resumes.txt"):
+    def __init__(self, position: str, number_of_resumes: int, area: int, writefile_name: str):
         super().__init__(writefile_name,  writefile_name)
         self.position = position.lower().replace(' ', '+')
         self.number_of_resumes = number_of_resumes
@@ -15,12 +15,7 @@ class ResumeColector(ParentFilter):
 
     # Собирает ссылки на резюме с глобальной страницы
     @abstractmethod
-    def get_resumes_links(self, html) -> tuple:
-        raise NotImplementedError
-
-    # Проверяет, есть ли на странице(глобальной) ссылки на вакансии
-    @abstractmethod
-    def is_empty(self, html) -> bool:
+    def _get_resumes_links(self, html) -> tuple:
         raise NotImplementedError
 
     # Запуск фильтра
@@ -31,10 +26,10 @@ class ResumeColector(ParentFilter):
 
 class hhResumeColector(ResumeColector):
 
-    def __init__(self, position: str, number_of_resumes: int, area=2, writefile_name="hh_resumes.txt"):
+    def __init__(self, position: str, number_of_resumes: int, area: int = 2, writefile_name: str = "hh_res.txt"):
         super().__init__(position, number_of_resumes, area, writefile_name)
 
-    def get_resumes_links(self, html) -> tuple:
+    def _get_resumes_links(self, html) -> tuple:
         # новый объект класса BeutifulSoup
         soup = BeautifulSoup(html, 'lxml')
         new_links = ()
@@ -45,20 +40,11 @@ class hhResumeColector(ResumeColector):
             i += 1
         return new_links
 
-    def is_empty(self, html) -> bool:
-        soup = BeautifulSoup(html, 'lxml')
-        links = soup.find_all('resume-serp_block-result-action')
-        if links == []:
-            return True
-        else:
-            return False
-
     # Функция, которая для данного запроса и региона ищет все страницы с результатами поиска и набирает большой список со всеми ссылками на вакансии возвращает список ссылок по запросу position в регионе с кодом area
     def run(self) -> None:
         print("Собираем глобальные ссылки...")
         basic_url = "".join(tuple(("https://hh.ru/search/resume?clusters=True", "&area=", self.area,
                                    "&order_by=relevance&logic=normal&pos=position&exp_period=all_time&no_magic=False&st=resumeSearch", "&text=", self.position, "&page=")))
-
         all_links = ()
 
         i = 0
@@ -66,16 +52,8 @@ class hhResumeColector(ResumeColector):
         pbar = tqdm(total=self.number_of_resumes//20)
         while i < self.number_of_resumes//20:
             url = basic_url+str(i)
-            try:
-                html = super().get_html(url)
-            except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                print(" Переподключение к глобальной странице...")
-                sleep(3)
-            if self.is_empty(html):
-                i += 1
-                pbar.update()
-                continue
-            all_links += self.get_resumes_links(html)
+            html = super()._get_html(url)
+            all_links += self._get_resumes_links(html)
             i += 1
             pbar.update()
         pbar.close()

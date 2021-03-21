@@ -8,6 +8,7 @@ from Filters.GenderFilter import hhGenderFilter
 from Filters.SalaryFilter import hhSalaryFilter
 from Filters.VerbFilter import hhVerbFilter
 from Filters.TagsFilter import hhTagsFilter
+import os
 
 
 '''
@@ -31,15 +32,17 @@ def sort_relevant_jobs(keyword):  # сортирует резюме по кол-
 
 
 class hireeApp():
-    def __init__(self):
+    def __init__(self, resultfile_name: str = "RESULT.txt"):
         self.Filters = []
+        self.resultfile_name = resultfile_name
+        # потом надо переделать чтобы фильтр работали с одним файлом RESULT.txt
 
     def add_filter(self, new_filter: ParentFilter) -> None:
-        self.Filters += [new_filter]
+        if isinstance(new_filter, ParentFilter):
+            self.Filters += [new_filter]
 
     def add_filters(self, new_filters: list) -> None:
         for new_filter in new_filters:
-            # if type(new_filter) == type(ParentFilter):
             self.add_filter(new_filter)
 
     def execute(self) -> None:
@@ -51,13 +54,18 @@ if __name__ == '__main__':
 
     my_hiree = hireeApp()
 
-    filters = [hhResumeColector("Менеджер", 200),
-               hhExperienceFilter("Менеджер", writefile_name="exp_res.txt"),
-               hhZodiacFilter("Овен", "exp_res.txt", "zod_res.txt"),
-               hhGenderFilter("Мужчина", "zod_res.txt", "gen_res.txt"),
-               hhSalaryFilter(60000, 250000, "gen_res.txt", "sal_res.txt"),
-               hhVerbFilter("sal_res.txt", "verb_res.txt"),
-               hhTagsFilter("verb_res.txt", "tag_res.txt")]
+    filters = [
+        hhResumeColector("Менеджер по продажам", 1000),
+        hhExperienceFilter("Менеджер по продажам",
+                           writefile_name="hh_exp_res.txt"),
+        hhZodiacFilter("Овен", "hh_exp_res.txt", "hh_zod_res.txt"),
+        hhGenderFilter("Мужчина",  "hh_zod_res.txt", "hh_gen_res.txt"),
+        hhSalaryFilter(60000, 250000, "hh_gen_res.txt", "hh_sal_res.txt"),
+        hhVerbFilter("hh_sal_res.txt", "hh_verb_res.txt"),
+        hhTagsFilter("hh_verb_res.txt", "hh_tag_res.txt")]
 
     my_hiree.add_filters(filters)
-    my_hiree.execute()
+    try:
+        my_hiree.execute()
+    except KeyboardInterrupt as e:
+        os._exit(1)

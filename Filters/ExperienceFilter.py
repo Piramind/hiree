@@ -7,9 +7,9 @@ from .ParentFilter import *
 class ExperienceFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, position: str, min_experience=24, procents=60, readfile_name="all_resumes.txt", writefile_name="exp_resumes.txt"):
+    def __init__(self, position: str, min_experience: int, procents: int, readfile_name: str, writefile_name: str):
         super().__init__(readfile_name, writefile_name)
-        self.position = position
+        self.position = position.lower()
         self.min_experience = min_experience
         self.procents = procents
 
@@ -30,6 +30,8 @@ class ExperienceFilter(ParentFilter):
 
 
 class hhExperienceFilter(ExperienceFilter):
+    def __init__(self, position: str, min_experience: int = 24, procents: int = 60, readfile_name: str = "hh_res.txt", writefile_name: str = "hh_experience_res.txt"):
+        super().__init__(position, min_experience, procents, readfile_name, writefile_name)
 
     def young_age(self, soup, age_limit: int) -> bool:
         age = soup.find(attrs={"data-qa": "resume-personal-age"})
@@ -90,12 +92,8 @@ class hhExperienceFilter(ExperienceFilter):
                 i = 0
                 while i < progress:
                     link = read_file.readline().strip()
-                    try:
-                        html = super().get_html(link)
-                        soup = BeautifulSoup(html, 'lxml')
-                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                        print(" Переподключение к страничке с резюме...")
-                        sleep(3)
+                    html = super()._get_html(link)
+                    soup = BeautifulSoup(html, 'lxml')
                     if self.young_age(soup, 26):
                         write_file.write(link+'\n')
                         total += 1
@@ -106,5 +104,5 @@ class hhExperienceFilter(ExperienceFilter):
                     i += 1
                     pbar.update()
                 pbar.close()
-        super().write_top(total)
+        super()._write_top(total)
         print("Найдено", total, "подходящих резюме.")

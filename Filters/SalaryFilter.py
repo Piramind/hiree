@@ -5,7 +5,7 @@ from re import sub
 class SalaryFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, min_salary: int, max_salary: int, readfile_name="all_resumes.txt", writefile_name="salary_resumes.txt"):
+    def __init__(self, min_salary: int, max_salary: int, readfile_name: str, writefile_name: str):
         super().__init__(readfile_name, writefile_name)
         self.min_salary = min_salary
         self.max_salary = max_salary
@@ -18,6 +18,9 @@ class SalaryFilter(ParentFilter):
 
 class hhSalaryFilter(SalaryFilter):
 
+    def __init__(self, min_salary, max_salary, readfile_name="hh_res.txt", writefile_name="hh_salary_res.txt"):
+        super().__init__(min_salary, max_salary, readfile_name, writefile_name)
+
     def run(self) -> None:
         print("Проверяем желаемую зарплату...")
         with open(self.readfile_name, 'r', encoding='utf-8') as read_file:
@@ -28,12 +31,8 @@ class hhSalaryFilter(SalaryFilter):
                 total = 0
                 while link_ind < progress:
                     link = read_file.readline().strip()
-                    try:
-                        html = super().get_html(link[:len(link)-4])
-                        soup = BeautifulSoup(html, 'lxml')
-                    except (exceptions.ReadTimeout, exceptions.ConnectionError, exceptions.ChunkedEncodingError) as e:
-                        print(" Переподключение к страничке с резюме...")
-                        sleep(3)
+                    html = super()._get_html(link[:len(link)-4])
+                    soup = BeautifulSoup(html, 'lxml')
                     money = soup.find(
                         'span', class_="resume-block__salary resume-block__title-text_salary")
                     if not money:
@@ -64,5 +63,5 @@ class hhSalaryFilter(SalaryFilter):
                     link_ind += 1
                     pbar.update()
                 pbar.close()
-        super().write_top(total)
+        super()._write_top(total)
         print("Найденно", total, "подходящих резюме.")
