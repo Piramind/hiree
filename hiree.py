@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from Filters.ParentFilter import ParentFilter
-from Filters.ResumeColector import hhResumeColector
-from Filters.ExperienceFilter import hhExperienceFilter
+from Filters.ResumeCollector import hhResumeCollector, superjobResumeCollector
+from Filters.ExperienceFilter import hhExperienceFilter, superjobExperienceFilter
 from Filters.ZodiacFilter import hhZodiacFilter
 from Filters.GenderFilter import hhGenderFilter
 from Filters.SalaryFilter import hhSalaryFilter
@@ -45,6 +45,9 @@ class hireeApp():
         for new_filter in new_filters:
             self.add_filter(new_filter)
 
+    def del_filters(self) -> None:
+        self.Filters = []
+
     def execute(self) -> None:
         for filter in self.Filters:
             filter.run()
@@ -54,17 +57,21 @@ if __name__ == '__main__':
 
     my_hiree = hireeApp()
 
-    filters = [
-        hhResumeColector("Менеджер по продажам", 1000),
-        hhExperienceFilter("Менеджер по продажам",
-                           writefile_name="hh_exp_res.txt"),
-        hhZodiacFilter("Овен", "hh_exp_res.txt", "hh_zod_res.txt"),
-        hhGenderFilter("Мужчина",  "hh_zod_res.txt", "hh_gen_res.txt"),
-        hhSalaryFilter(60000, 250000, "hh_gen_res.txt", "hh_sal_res.txt"),
-        hhVerbFilter("hh_sal_res.txt", "hh_verb_res.txt"),
-        hhTagsFilter("hh_verb_res.txt", "hh_tag_res.txt")]
+    # hhFilters = [
+    #     hhResumeCollector("Менеджер по продажам", 1000),
+    #     hhExperienceFilter("Менеджер по продажам",
+    #                        writefile_name="hh_exp_res.txt"),
+    #     hhZodiacFilter("Овен", "hh_exp_res.txt", "hh_zod_res.txt"),
+    #     hhGenderFilter("Мужчина",  "hh_zod_res.txt", "hh_gen_res.txt"),
+    #     hhSalaryFilter(60000, 250000, "hh_gen_res.txt", "hh_sal_res.txt"),
+    #     hhVerbFilter("hh_sal_res.txt", "hh_verb_res.txt"),
+    #     hhTagsFilter("hh_verb_res.txt", "hh_tag_res.txt")]
 
-    my_hiree.add_filters(filters)
+    superjobFilters = [superjobResumeCollector("Менеджер по продажам", 100),
+                       superjobExperienceFilter("Менеджер по продажам")]
+
+    # my_hiree.add_filters(hhFilters)
+    my_hiree.add_filters(superjobFilters)
     try:
         my_hiree.execute()
     except KeyboardInterrupt as e:

@@ -21,10 +21,10 @@ class ParentFilter():
         for i in range(5):
             try:
                 html = get(url, headers=headers).text
-                str_err = None
-            except Exception as str_err:
-                pass
-            if str_err:
+                error = False
+            except:
+                error = True
+            if error:
                 print("Обработка исключения в _get_html...")
                 sleep(2)
             else:
