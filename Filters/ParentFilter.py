@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from requests import get, exceptions
-from bs4 import BeautifulSoup
 from time import sleep
-from tqdm import tqdm
 from abc import ABCMeta, abstractmethod
 
 
 class ParentFilter():
     __metaclass__ = ABCMeta
 
-    def __init__(self, readfile_name: str, writefile_name: str):
-        self.readfile_name = readfile_name
-        self.writefile_name = writefile_name
+    def __init__(self, file_name: str):
+        self.file_name = file_name
 
     def _get_html(self, url) -> str:
         headers = {
@@ -33,12 +30,21 @@ class ParentFilter():
 
     def _write_top(self,  some_int: int) -> None:
         f = open(self.writefile_name, "r")
-        oline = f.readlines()
-        oline.insert(0, str(some_int)+'\n')
+        all_lines = f.readlines()
+        all_lines.insert(0, str(some_int)+'\n')
         f.close()
         f = open(self.writefile_name, "w")
-        f.writelines(oline)
+        f.writelines(all_lines)
         f.close()
+
+    def _write_result_links(self, file_name: str, result_links: list, display_msg: bool = True) -> None:
+        open(file_name, 'w', encoding='utf-8').close()
+        with open(file_name, 'w', encoding='utf-8') as f:
+            f.write(str(len(result_links)) + '\n')
+            for link in result_links:
+                f.write(link + '\n')
+        if display_msg:
+            print("Найдено", len(result_links), "подходящих резюме.")
 
     @abstractmethod
     def run(self) -> None:

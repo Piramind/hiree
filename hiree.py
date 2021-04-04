@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-
 from Filters.ParentFilter import ParentFilter
-from Filters.ResumeCollector import hhResumeCollector, superjobResumeCollector
-from Filters.ExperienceFilter import hhExperienceFilter, superjobExperienceFilter
-from Filters.ZodiacFilter import hhZodiacFilter
-from Filters.GenderFilter import hhGenderFilter
-from Filters.SalaryFilter import hhSalaryFilter
-from Filters.VerbFilter import hhVerbFilter
-from Filters.TagsFilter import hhTagsFilter
+# Фильтры HeadHunter
+from Filters.headhunter.hhResumeCollector import hhResumeCollector
+from Filters.headhunter.hhSalaryFilter import hhSalaryFilter
+from Filters.headhunter.hhGenderFilter import hhGenderFilter
+from Filters.headhunter.hhZodiacFilter import hhZodiacFilter
+from Filters.headhunter.hhExperienceFilter import hhExperienceFilter
+from Filters.headhunter.hhVerbFilter import hhVerbFilter
+from Filters.headhunter.hhTagsFilter import hhTagsFilter
+# Фильтры SuperJob
+# from Filters.superjob.sjResumeCollector import sjResumeCollector
+# from Filters.superjob.sjExperienceFilter import sjExperienceFilter
+#
 import os
 
 
@@ -31,17 +35,17 @@ def sort_relevant_jobs(keyword):  # сортирует резюме по кол-
 '''
 
 
-class hireeApp():
+class HireeApp:
     def __init__(self, resultfile_name: str = "RESULT.txt"):
         self.Filters = []
         self.resultfile_name = resultfile_name
-        # потом надо переделать чтобы фильтр работали с одним файлом RESULT.txt
+        # потом надо переделать чтобы фильтры работали с одним файлом RESULT.txt
 
     def add_filter(self, new_filter: ParentFilter) -> None:
         if isinstance(new_filter, ParentFilter):
             self.Filters += [new_filter]
 
-    def add_filters(self, new_filters: list) -> None:
+    def add_filters(self, new_filters: tuple) -> None:
         for new_filter in new_filters:
             self.add_filter(new_filter)
 
@@ -51,27 +55,29 @@ class hireeApp():
     def execute(self) -> None:
         for filter in self.Filters:
             filter.run()
+# Может можно передавать название файла в run()?
 
 
 if __name__ == '__main__':
 
-    my_hiree = hireeApp()
+    my_hiree = HireeApp()
 
-    # hhFilters = [
-    #     hhResumeCollector("Менеджер по продажам", 1000),
-    #     hhExperienceFilter("Менеджер по продажам",
-    #                        writefile_name="hh_exp_res.txt"),
-    #     hhZodiacFilter("Овен", "hh_exp_res.txt", "hh_zod_res.txt"),
-    #     hhGenderFilter("Мужчина",  "hh_zod_res.txt", "hh_gen_res.txt"),
-    #     hhSalaryFilter(60000, 250000, "hh_gen_res.txt", "hh_sal_res.txt"),
-    #     hhVerbFilter("hh_sal_res.txt", "hh_verb_res.txt"),
-    #     hhTagsFilter("hh_verb_res.txt", "hh_tag_res.txt")]
+    hhFilters = (hhResumeCollector("Менеджер по продажам", 1000),
+                 hhSalaryFilter(),
+                 hhGenderFilter(),
+                 hhZodiacFilter("овен"),
+                 hhExperienceFilter("Менеджер по продажам"),
+                 hhVerbFilter(),
+                 hhTagsFilter())
+    '''
+    ВАЖНО! Python не разрешает делать импорт из папок, находящихся вместе в одной директории. Это можно решить, но пока это не особо будет мешать тк все агрегаторы тестятся отдельно. Если решить эту проблему, то можно будет разные фильтры хранить в общем tuple.
+    Вот решение: https://stackoverflow.com/questions/6323860/sibling-package-imports
+    '''
+    # superjobFilters = (sjResumeCollector("Менеджер по продажам", 100),
+    #                    sjExperienceFilter("Менеджер по продажам"))
 
-    superjobFilters = [superjobResumeCollector("Менеджер по продажам", 100),
-                       superjobExperienceFilter("Менеджер по продажам")]
-
-    # my_hiree.add_filters(hhFilters)
-    my_hiree.add_filters(superjobFilters)
+    my_hiree.add_filters(hhFilters)
+    # my_hiree.add_filters(superjobFilters)
     try:
         my_hiree.execute()
     except KeyboardInterrupt as e:
