@@ -11,7 +11,7 @@ class sjZodiacFilter(ZodiacFilter):
         super().__init__(desired_sign, file_name)
 
     def run(self):
-        print("Проверяем знак зодиака...")
+        print("SuperJob: Проверяем знак зодиака...")
         total = 0
         result_links = []
         with open(self.file_name, 'r', encoding='utf-8') as file:

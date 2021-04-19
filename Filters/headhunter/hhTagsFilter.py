@@ -10,7 +10,7 @@ class hhTagsFilter(TagsFilter):
         super().__init__(file_name, wb_name, main, about_myself)
 
     def run(self) -> None:
-        print("Проверяем теги...")
+        print("HeadHunter: Проверяем теги...")
         if not self.main and not self.about_myself:
             return
 
@@ -24,18 +24,23 @@ class hhTagsFilter(TagsFilter):
                 link = file.readline().strip()
                 html = super()._get_html(link)
                 soup = BeautifulSoup(html, 'lxml')
+                job_dscrptn = ''
                 if self.main:
-                    job_dscrptn = soup.find_all(
+                    job1_dscrptn = soup.find_all(
                         attrs={"data-qa": "resume-block-experience-description"})
+                    if job1_dscrptn:
+                        job_dscrptn += str(job1_dscrptn)
                 if self.about_myself:
-                    job_dscrptn += soup.find(attrs={"data-qa": "resume-block-skills-content"})
-                if not job_dscrptn:
+                    job2_dscrptn = soup.find(attrs={"data-qa": "resume-block-skills-content"})
+                    if job2_dscrptn:
+                        job_dscrptn += str(job2_dscrptn)
+                if job_dscrptn == '':
                     link_ind += 1
                     pbar.update()
                     continue
 
                 # Склеиваем всё в одно
-                job = "".join(j.get_text() for j in job_dscrptn)
+                job = "".join(str(j) for j in job_dscrptn)
                 job = sub("[^А-Яа-я .]", "", job)
                 # print(job)
 

@@ -11,7 +11,7 @@ class sjSalaryFilter(SalaryFilter):
         super().__init__(min_salary, max_salary, file_name)
 
     def run(self) -> None:
-        print("Проверяем желаемую зарплату...")
+        print("SuperJob: Проверяем желаемую зарплату...")
         result_links = []
 
         with open(self.file_name, 'r', encoding='utf-8') as file:

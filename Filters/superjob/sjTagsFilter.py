@@ -10,7 +10,7 @@ class sjTagsFilter(TagsFilter):
         super().__init__(file_name, wb_name, main, about_myself)
 
     def run(self) -> None:
-        print("Проверяем теги...")
+        print("SuperJob: Проверяем теги...")
         if not self.main and not self.about_myself:
             return
 
@@ -24,12 +24,15 @@ class sjTagsFilter(TagsFilter):
                 link = file.readline().strip()
                 html = super()._get_html(link)
                 soup = BeautifulSoup(html, 'lxml')
+                job_dscrptn = ''
                 if self.main:
-                    job_dscrptn = soup.find_all(
+                    job1_dscrptn = soup.find_all(
                         'div', class_="_3mfro _2VtGa _1hP6a _2JVkc _2VHxz _3LJqf _15msI")
+                    if job1_dscrptn:
+                        job_dscrptn += job1_dscrptn
                 # if self.about_myself:
                     # div class="_2g1F-"><div class="_3mfro _2VtGa _1hP6a _2JVkc _2VHxz _3LJqf _15msI
-                if not job_dscrptn:
+                if job_dscrptn == '':
                     link_ind += 1
                     pbar.update()
                     continue

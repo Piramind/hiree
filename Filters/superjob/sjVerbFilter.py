@@ -11,7 +11,7 @@ class sjVerbFilter(VerbFilter):
         super().__init__(file_name, main, about_myself)
 
     def run(self):
-        print("Фильтр по глаголам...")
+        print("SuperJob: Фильтр по глаголам...")
         result_links = []
         with open(self.file_name, 'r', encoding='utf-8') as file:  # Откуда берём сслыки на резюме
             progress = int(file.readline().strip())  # Сколько всего будет ссылок на резюме
@@ -23,15 +23,18 @@ class sjVerbFilter(VerbFilter):
                 link = file.readline().strip()  # Прочитали ссылку на резюме
                 html = super()._get_html(link)
                 soup = BeautifulSoup(html, 'lxml')
+                job_dscrptn = ''
                 if self.main:  # Про каждое место работы
-                    job_dscrptn = soup.find_all(
+                    job1_dscrptn = soup.find_all(
                         'div', class_="_3mfro _2VtGa _1hP6a _2JVkc _2VHxz _3LJqf _15msI")
-                if not job_dscrptn:  # Если ничего не нашли, то переходим к следующему резюме
+                    if job1_dscrptn:
+                        job_dscrptn += job1_dscrptn
+                if job_dscrptn == '':  # Если ничего не нашли, то переходим к следующему резюме
                     link_ind += 1
                     pbar.update()  # Обновляет прогресс-бар
                     continue
 
-                job = "".join(j.get_text() for j in job_dscrptn)  # Получаем текст
+                job = ''.join(str(j) for j in job_dscrptn)  # Получаем текст
                 job = sub("[^А-Яа-я ]", "", job)  # Оставляем только русские буквы и пробелы
                 job = job.split()  # Дробим по пробелам и получаем list слов
                 word_count = len(job)  # колличество слов

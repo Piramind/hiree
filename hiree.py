@@ -19,6 +19,11 @@ from Filters.superjob.sjTagsFilter import sjTagsFilter
 #
 import os
 
+'''
+ВАЖНО! Python не разрешает делать импорт из папок, находящихся вместе в одной директории. Это можно решить, но пока это не особо будет мешать тк все агрегаторы тестятся отдельно. Если решить эту проблему, то можно будет разные фильтры хранить в общем tuple.
+Вот решение: https://stackoverflow.com/questions/6323860/sibling-package-imports
+P.S. Всё работает...
+'''
 
 '''
 def sort_relevant_jobs(keyword):  # сортирует резюме по кол-ву релевантных мест работы
@@ -80,10 +85,6 @@ if __name__ == '__main__':
                  sjExperienceFilter("Менеджер по продажам"),
                  sjVerbFilter(),
                  sjTagsFilter()]
-    '''
-    ВАЖНО! Python не разрешает делать импорт из папок, находящихся вместе в одной директории. Это можно решить, но пока это не особо будет мешать тк все агрегаторы тестятся отдельно. Если решить эту проблему, то можно будет разные фильтры хранить в общем tuple.
-    Вот решение: https://stackoverflow.com/questions/6323860/sibling-package-imports
-    '''
 
     my_hiree.add_filters(hhFilters)
     my_hiree.add_filters(sjFilters)

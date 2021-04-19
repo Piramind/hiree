@@ -10,7 +10,7 @@ class hhGenderFilter(GenderFilter):
         super().__init__(desired_gender, file_name)
 
     def run(self):
-        print("Проверяем пол...")
+        print("HeadHunter: Проверяем пол...")
         result_links = []
         with open(self.file_name, 'r', encoding='utf-8') as file:
             progress = int(file.readline().strip())

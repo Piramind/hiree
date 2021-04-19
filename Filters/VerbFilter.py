@@ -9,6 +9,8 @@ class VerbFilter(ParentFilter):
 
     def __init__(self, file_name: str, main: bool, about_myself: bool):
         super().__init__(file_name)
+        self.main = main
+        self.about_myself = about_myself
 
     # Запуск фильтра
     @abstractmethod

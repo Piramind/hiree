@@ -11,7 +11,7 @@ class sjGenderFilter(GenderFilter):
         super().__init__(desired_gender, file_name)
 
     def run(self) -> None:
-        print("Проверяем пол...")
+        print("SuperJob: Проверяем пол...")
         result_links = []
         morph = pymorphy2.MorphAnalyzer()  # Анализатор слов
         with open(self.file_name, 'r', encoding='utf-8') as file:
