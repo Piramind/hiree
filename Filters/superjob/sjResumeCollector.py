@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from Filters.ResumeCollector import ResumeCollector
 from bs4 import BeautifulSoup
+from transliterate import translit
 from tqdm import tqdm
 
 
-class superjobResumeCollector(ResumeCollector):
+class sjResumeCollector(ResumeCollector):
     def __init__(self, position: str, number_of_resumes: int, area: str = 'spb.', file_name: str = "sj_RESULT.txt"):
         pos = translit(position, reversed=True).replace(' ', '-')
         super().__init__(pos, number_of_resumes, area, file_name)

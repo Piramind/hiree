@@ -6,3 +6,6 @@
 ehthumbs.db
 Thumbs.db
 *.txt
+.gitignore
+__init__.py
+__pycache__

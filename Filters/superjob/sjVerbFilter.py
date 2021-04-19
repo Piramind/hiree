@@ -6,8 +6,8 @@ from re import sub
 import pymorphy2
 
 
-class hhVerbFilter(VerbFilter):
-    def __init__(self, file_name: str = "hh_RESULT.txt", main: bool = True, about_myself: bool = True):
+class sjVerbFilter(VerbFilter):
+    def __init__(self, file_name: str = "sj_RESULT.txt", main: bool = True, about_myself: bool = False):
         super().__init__(file_name, main, about_myself)
 
     def run(self):
@@ -23,11 +23,9 @@ class hhVerbFilter(VerbFilter):
                 link = file.readline().strip()  # Прочитали ссылку на резюме
                 html = super()._get_html(link)
                 soup = BeautifulSoup(html, 'lxml')
-                if self.main:
+                if self.main:  # Про каждое место работы
                     job_dscrptn = soup.find_all(
-                        attrs={"data-qa": "resume-block-experience-description"})  # Про каждое место работы
-                if self.about_myself:
-                    job_dscrptn += soup.find(attrs={"data-qa": "resume-block-skills-content"})
+                        'div', class_="_3mfro _2VtGa _1hP6a _2JVkc _2VHxz _3LJqf _15msI")
                 if not job_dscrptn:  # Если ничего не нашли, то переходим к следующему резюме
                     link_ind += 1
                     pbar.update()  # Обновляет прогресс-бар

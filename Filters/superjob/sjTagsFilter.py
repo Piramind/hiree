@@ -5,8 +5,8 @@ from tqdm import tqdm
 from re import sub
 
 
-class hhTagsFilter(TagsFilter):
-    def __init__(self, file_name: str = "hh_RESULT.txt", wb_name: str = "tags.xlsx", main: bool = True, about_myself: bool = True):
+class sjTagsFilter(TagsFilter):
+    def __init__(self, file_name: str = "sj_RESULT.txt", wb_name: str = "tags.xlsx", main: bool = True, about_myself: bool = False):
         super().__init__(file_name, wb_name, main, about_myself)
 
     def run(self) -> None:
@@ -26,9 +26,9 @@ class hhTagsFilter(TagsFilter):
                 soup = BeautifulSoup(html, 'lxml')
                 if self.main:
                     job_dscrptn = soup.find_all(
-                        attrs={"data-qa": "resume-block-experience-description"})
-                if self.about_myself:
-                    job_dscrptn += soup.find(attrs={"data-qa": "resume-block-skills-content"})
+                        'div', class_="_3mfro _2VtGa _1hP6a _2JVkc _2VHxz _3LJqf _15msI")
+                # if self.about_myself:
+                    # div class="_2g1F-"><div class="_3mfro _2VtGa _1hP6a _2JVkc _2VHxz _3LJqf _15msI
                 if not job_dscrptn:
                     link_ind += 1
                     pbar.update()

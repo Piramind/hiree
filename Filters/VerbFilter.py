@@ -7,7 +7,7 @@ from .ParentFilter import *
 class VerbFilter(ParentFilter):
     __metaclass__ = ABCMeta
 
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: str, main: bool, about_myself: bool):
         super().__init__(file_name)
 
     # Запуск фильтра

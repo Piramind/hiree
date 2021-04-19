@@ -9,8 +9,13 @@ from Filters.headhunter.hhExperienceFilter import hhExperienceFilter
 from Filters.headhunter.hhVerbFilter import hhVerbFilter
 from Filters.headhunter.hhTagsFilter import hhTagsFilter
 # Фильтры SuperJob
-# from Filters.superjob.sjResumeCollector import sjResumeCollector
-# from Filters.superjob.sjExperienceFilter import sjExperienceFilter
+from Filters.superjob.sjResumeCollector import sjResumeCollector
+from Filters.superjob.sjExperienceFilter import sjExperienceFilter
+from Filters.superjob.sjSalaryFilter import sjSalaryFilter
+from Filters.superjob.sjGenderFilter import sjGenderFilter
+from Filters.superjob.sjZodiacFilter import sjZodiacFilter
+from Filters.superjob.sjVerbFilter import sjVerbFilter
+from Filters.superjob.sjTagsFilter import sjTagsFilter
 #
 import os
 
@@ -55,29 +60,33 @@ class HireeApp:
     def execute(self) -> None:
         for filter in self.Filters:
             filter.run()
-# Может можно передавать название файла в run()?
 
 
 if __name__ == '__main__':
 
     my_hiree = HireeApp()
 
-    hhFilters = (hhResumeCollector("Менеджер по продажам", 1000),
+    hhFilters = [hhResumeCollector("Менеджер по продажам", 1000),
                  hhSalaryFilter(),
-                 hhGenderFilter(),
+                 hhGenderFilter("мужчина"),
                  hhZodiacFilter("овен"),
                  hhExperienceFilter("Менеджер по продажам"),
                  hhVerbFilter(),
-                 hhTagsFilter())
+                 hhTagsFilter()]
+
+    sjFilters = [sjResumeCollector("Менеджер по продажам", 1000),
+                 sjSalaryFilter(),
+                 sjGenderFilter("мужчина"),
+                 sjExperienceFilter("Менеджер по продажам"),
+                 sjVerbFilter(),
+                 sjTagsFilter()]
     '''
     ВАЖНО! Python не разрешает делать импорт из папок, находящихся вместе в одной директории. Это можно решить, но пока это не особо будет мешать тк все агрегаторы тестятся отдельно. Если решить эту проблему, то можно будет разные фильтры хранить в общем tuple.
     Вот решение: https://stackoverflow.com/questions/6323860/sibling-package-imports
     '''
-    # superjobFilters = (sjResumeCollector("Менеджер по продажам", 100),
-    #                    sjExperienceFilter("Менеджер по продажам"))
 
     my_hiree.add_filters(hhFilters)
-    # my_hiree.add_filters(superjobFilters)
+    my_hiree.add_filters(sjFilters)
     try:
         my_hiree.execute()
     except KeyboardInterrupt as e:

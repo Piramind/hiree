@@ -2,7 +2,7 @@
 from Filters.ExperienceFilter import ExperienceFilter
 
 
-class superjobExperienceFilter(ExperienceFilter):
+class sjExperienceFilter(ExperienceFilter):
     def __init__(self, position: str, min_experience: int = 24, procents: int = 60, file_name: str = "sj_RESULT.txt"):
         super().__init__(position, min_experience, procents, file_name)
 
