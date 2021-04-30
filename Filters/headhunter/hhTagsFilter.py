@@ -25,15 +25,18 @@ class hhTagsFilter(TagsFilter):
                 html = super()._get_html(link)
                 soup = BeautifulSoup(html, 'lxml')
                 job_dscrptn = ''
+
                 if self.main:
                     job1_dscrptn = soup.find_all(
                         attrs={"data-qa": "resume-block-experience-description"})
-                    if job1_dscrptn:
+                    if job1_dscrptn is not None:
                         job_dscrptn += str(job1_dscrptn)
+
                 if self.about_myself:
                     job2_dscrptn = soup.find(attrs={"data-qa": "resume-block-skills-content"})
-                    if job2_dscrptn:
+                    if job2_dscrptn is not None:
                         job_dscrptn += str(job2_dscrptn)
+
                 if job_dscrptn == '':
                     link_ind += 1
                     pbar.update()
@@ -67,5 +70,5 @@ class hhTagsFilter(TagsFilter):
         with open(self.file_name, 'w', encoding='utf-8') as f:
             f.write(str(len(data)) + '\n')
             for k in sorted(data, key=data.get, reverse=True):
-                f.write(k + ' ' + str(data[k]) + '\n')
+                f.write(k + '\n')  # + ' ' + str(data[k])
         print("Найдено", len(data), "подходящих резюме.")

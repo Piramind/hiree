@@ -54,3 +54,7 @@ class hhExperienceFilter(ExperienceFilter):
             return True
         else:
             return False
+
+    def run(self) -> None:
+        print("HeadHunter: Проверяем опыт работы...")
+        super().run()

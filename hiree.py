@@ -8,6 +8,8 @@ from Filters.headhunter.hhZodiacFilter import hhZodiacFilter
 from Filters.headhunter.hhExperienceFilter import hhExperienceFilter
 from Filters.headhunter.hhVerbFilter import hhVerbFilter
 from Filters.headhunter.hhTagsFilter import hhTagsFilter
+from Filters.headhunter.hhUniversityFilter import hhUniversityFilter
+from Filters.headhunter.hhMakeReport import hhMakeReport
 # Фильтры SuperJob
 from Filters.superjob.sjResumeCollector import sjResumeCollector
 from Filters.superjob.sjExperienceFilter import sjExperienceFilter
@@ -19,11 +21,6 @@ from Filters.superjob.sjTagsFilter import sjTagsFilter
 #
 import os
 
-'''
-ВАЖНО! Python не разрешает делать импорт из папок, находящихся вместе в одной директории. Это можно решить, но пока это не особо будет мешать тк все агрегаторы тестятся отдельно. Если решить эту проблему, то можно будет разные фильтры хранить в общем tuple.
-Вот решение: https://stackoverflow.com/questions/6323860/sibling-package-imports
-P.S. Всё работает...
-'''
 
 '''
 def sort_relevant_jobs(keyword):  # сортирует резюме по кол-ву релевантных мест работы
@@ -48,16 +45,14 @@ def sort_relevant_jobs(keyword):  # сортирует резюме по кол-
 class HireeApp:
     def __init__(self, resultfile_name: str = "RESULT.txt"):
         self.Filters = []
-        self.resultfile_name = resultfile_name
-        # потом надо переделать чтобы фильтры работали с одним файлом RESULT.txt
 
-    def add_filter(self, new_filter: ParentFilter) -> None:
+    def _add_filter(self, new_filter: ParentFilter) -> None:
         if isinstance(new_filter, ParentFilter):
             self.Filters += [new_filter]
 
     def add_filters(self, new_filters: tuple) -> None:
         for new_filter in new_filters:
-            self.add_filter(new_filter)
+            self._add_filter(new_filter)
 
     def del_filters(self) -> None:
         self.Filters = []
@@ -71,23 +66,26 @@ if __name__ == '__main__':
 
     my_hiree = HireeApp()
 
-    hhFilters = [hhResumeCollector("Менеджер по продажам", 1000),
-                 hhSalaryFilter(),
+    hhFilters = [hhResumeCollector("Менеджер по продажам", 100),
+                 hhSalaryFilter(50000, 190000),
                  hhGenderFilter("мужчина"),
                  hhZodiacFilter("овен"),
                  hhExperienceFilter("Менеджер по продажам"),
+                 hhUniversityFilter(),
                  hhVerbFilter(),
                  hhTagsFilter()]
 
-    sjFilters = [sjResumeCollector("Менеджер по продажам", 1000),
+    hhFilters2 = [hhResumeCollector("Менеджер по продажам", 20), hhMakeReport()]
+
+    sjFilters = [sjResumeCollector("Менеджер по продажам", 90),
                  sjSalaryFilter(),
                  sjGenderFilter("мужчина"),
                  sjExperienceFilter("Менеджер по продажам"),
                  sjVerbFilter(),
                  sjTagsFilter()]
 
-    my_hiree.add_filters(hhFilters)
-    my_hiree.add_filters(sjFilters)
+    my_hiree.add_filters(hhFilters2)
+    # my_hiree.add_filters(sjFilters)
     try:
         my_hiree.execute()
     except KeyboardInterrupt as e:

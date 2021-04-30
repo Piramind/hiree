@@ -57,3 +57,7 @@ class sjExperienceFilter(ExperienceFilter):
             return True
         else:
             return False
+
+    def run(self) -> None:
+        print("SuperJob: Проверяем опыт работы...")
+        super().run()

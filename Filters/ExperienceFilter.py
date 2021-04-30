@@ -24,8 +24,8 @@ class ExperienceFilter(ParentFilter):
         raise NotImplementedError
 
     # Запуск фильтра
+    @abstractmethod
     def run(self) -> None:
-        print("Проверяем опыт работы...")
         total_links = 0
         result_links = []
 
